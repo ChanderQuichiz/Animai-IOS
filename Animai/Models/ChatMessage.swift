@@ -1,7 +1,11 @@
-//
-//  ChatMessage.swift
-//  Animai
-//
-//  Created by XCODE on 13/08/26.
-//
+import Foundation
 
+struct ChatMessage {
+    let text: String
+    let sender: MessageSender
+}
+
+enum MessageSender {
+    case user
+    case assistant
+}

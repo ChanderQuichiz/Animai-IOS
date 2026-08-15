@@ -8,7 +8,14 @@
 import UIKit
 
 class AssistantMessageTableViewCell: UITableViewCell {
-
+    
+    static let identifier = "AssistantMessageCell"
+    
+    @IBOutlet private weak var messageBubbleView: UIView!
+    
+    @IBOutlet private weak var messageLabel: UILabel!
+    
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -18,6 +25,11 @@ class AssistantMessageTableViewCell: UITableViewCell {
         super.setSelected(selected, animated: animated)
 
         // Configure the view for the selected state
+    }
+    
+    
+    func configure(with message: String) {
+        messageLabel.text = message
     }
     
 }
