@@ -14,7 +14,7 @@
 		B43F90E9302982E800FC140A /* Exceptions for "Animai" folder in "Animai" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = B43F90D6302982E600FC140A /* Animai */;
 		};
