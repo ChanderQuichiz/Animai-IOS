@@ -76,10 +76,6 @@ final class ChatViewController: UIViewController {
             userNib,
             forCellReuseIdentifier: UserMessageTableViewCell.identifier
         )
-
-        messagesTableView.rowHeight = UITableView.automaticDimension
-        messagesTableView.estimatedRowHeight = 80
-        
     }
     
     private func bindViewModel() {

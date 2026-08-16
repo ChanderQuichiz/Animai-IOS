@@ -1,7 +1,7 @@
-//
-//  MoodCard.swift
-//  Animai
-//
-//  Created by XCODE on 13/08/26.
-//
+import Foundation
 
+struct MoodCard {
+    let emoji: String
+    let title: String
+    let status: String
+}

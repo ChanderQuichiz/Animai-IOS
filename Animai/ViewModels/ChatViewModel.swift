@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-final class ChatViewModel {
+final class ChatViewModel: ObservableObject {
 
     @Published private(set) var messages: [ChatMessage] = [
         ChatMessage(
