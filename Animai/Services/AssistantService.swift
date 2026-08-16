@@ -95,25 +95,8 @@ final class AssistantService: AssistantServiceProtocol {
             token: tokenManager.getToken()
         )
 
-        // Mapeo simple de mood a emoji
-        let mood = response.mood.lowercased()
-        let emoji: String
-        if mood.contains("ansioso") || mood.contains("ansiedad") {
-            emoji = "😰"
-        } else if mood.contains("feliz") || mood.contains("bien") || mood.contains("alegre") {
-            emoji = "😊"
-        } else if mood.contains("triste") || mood.contains("mal") {
-            emoji = "😔"
-        } else if mood.contains("neutral") {
-            emoji = "😐"
-        } else if mood.contains("enojado") || mood.contains("ira") {
-            emoji = "😠"
-        } else {
-            emoji = "✨"
-        }
-
         return MoodCard(
-            emoji: emoji,
+            emoji: "", // Ya no mapeamos emojis manualmente
             title: response.mood,
             status: "Detectado para \(response.nameUser)",
             imageURL: response.moodImage

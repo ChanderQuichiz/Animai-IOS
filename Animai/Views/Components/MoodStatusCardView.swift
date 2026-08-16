@@ -5,6 +5,7 @@ final class MoodStatusCardView: UIView {
     @IBOutlet private weak var emojiLabel: UILabel!
     @IBOutlet private weak var titleLabel: UILabel!
     @IBOutlet private weak var statusLabel: UILabel!
+    @IBOutlet private weak var moodImageView: UIImageView!
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -48,8 +49,27 @@ final class MoodStatusCardView: UIView {
 
     func configure(with mood: MoodCard) {
         emojiLabel?.text = mood.emoji
+        emojiLabel?.isHidden = (mood.emoji.isEmpty)
+
         titleLabel?.text = mood.title
         statusLabel?.text = mood.status
         statusLabel?.isHidden = false
+
+        if let urlString = mood.imageURL, let url = URL(string: urlString) {
+            moodImageView?.isHidden = false
+            loadImage(from: url)
+        } else {
+            moodImageView?.isHidden = true
+        }
+    }
+
+    private func loadImage(from url: URL) {
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            if let data = data, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self?.moodImageView?.image = image
+                }
+            }
+        }.resume()
     }
 }
