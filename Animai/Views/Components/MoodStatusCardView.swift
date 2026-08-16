@@ -40,13 +40,16 @@ final class MoodStatusCardView: UIView {
         emojiLabel?.font = UIFont.systemFont(ofSize: 48)
         titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         titleLabel?.textColor = AppTheme.subtitle
-        statusLabel?.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        statusLabel?.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         statusLabel?.textColor = AppTheme.primaryDark
+        statusLabel?.numberOfLines = 0
+        statusLabel?.lineBreakMode = .byWordWrapping
     }
 
     func configure(with mood: MoodCard) {
         emojiLabel?.text = mood.emoji
         titleLabel?.text = mood.title
         statusLabel?.text = mood.status
+        statusLabel?.isHidden = false
     }
 }

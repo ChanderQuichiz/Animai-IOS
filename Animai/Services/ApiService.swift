@@ -31,6 +31,7 @@ final class ApiService {
 
         if !(200...299).contains(httpResponse.statusCode) {
             if httpResponse.statusCode == 401 {
+                NotificationCenter.default.post(name: NSNotification.Name("animai.session.expired"), object: nil)
                 throw ApiError.unauthorized
             }
             throw ApiError.serverError(httpResponse.statusCode)

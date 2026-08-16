@@ -13,8 +13,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        setupSessionObserver()
         return true
+    }
+
+    private func setupSessionObserver() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("animai.session.expired"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            AppNavigator.handleSessionExpired()
+        }
     }
 
     // MARK: UISceneSession Lifecycle

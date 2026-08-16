@@ -10,6 +10,7 @@ struct User: Codable, Equatable {
 
 struct AuthResponse: Codable {
     let token: String
+    let expiration: String
 }
 
 enum ApiError: Error {

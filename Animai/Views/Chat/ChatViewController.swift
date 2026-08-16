@@ -36,9 +36,45 @@ final class ChatViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setupUI()
         setupTableView()
         bindViewModel()
         messageTextField.delegate = self
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        if !TokenManager.shared.hasValidSession() {
+            AppNavigator.handleSessionExpired(from: self)
+            return
+        }
+
+        Task {
+            await viewModel.fetchHistory()
+        }
+    }
+
+    private func setupUI() {
+        let image = UIImage(named: "image_Send") ?? UIImage(systemName: "paperplane.fill")
+        sendButton.setImage(image?.withRenderingMode(.alwaysTemplate), for: .normal)
+        sendButton.setTitle("", for: .normal)
+        sendButton.tintColor = AppTheme.primaryBlue
+
+        // Evitar que el botón desaparezca si el layout es ambiguo
+        sendButton.imageView?.contentMode = .scaleAspectFit
+
+        // Redondear entrada de texto
+        messageTextField.layer.cornerRadius = 18
+        messageTextField.layer.masksToBounds = true
+        messageTextField.layer.borderWidth = 1
+        messageTextField.layer.borderColor = AppTheme.separator.cgColor
+        messageTextField.backgroundColor = .white
+
+        // Añadir padding izquierdo al texto
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
+        messageTextField.leftView = paddingView
+        messageTextField.leftViewMode = .always
     }
     
     

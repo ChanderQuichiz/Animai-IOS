@@ -39,15 +39,28 @@ final class ProfileViewModel: ProfileViewModelProtocol, ObservableObject {
     @MainActor
     func fetchData() async {
         isLoading = true
-        do {
-            async let moodCard = assistantService.getMoodCard()
-            async let recs = assistantService.getRecommendations()
 
-            self.mood = try await moodCard
-            self.recommendations = try await recs
-        } catch {
-            print("Error fetching profile data: \(error)")
+        // Ejecutamos ambas peticiones en paralelo pero manejamos sus errores de forma independiente
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                do {
+                    let moodData = try await self.assistantService.getMoodCard()
+                    await MainActor.run { self.mood = moodData }
+                } catch {
+                    print("Error fetching mood: \(error)")
+                }
+            }
+
+            group.addTask {
+                do {
+                    let recs = try await self.assistantService.getRecommendations()
+                    await MainActor.run { self.recommendations = recs }
+                } catch {
+                    print("Error fetching recommendations: \(error)")
+                }
+            }
         }
+
         isLoading = false
     }
 

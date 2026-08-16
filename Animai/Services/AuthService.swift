@@ -29,7 +29,7 @@ final class AuthService: AuthServiceProtocol {
             body: body
         )
 
-        tokenManager.save(token: authResponse.token)
+        tokenManager.save(token: authResponse.token, expiration: authResponse.expiration)
 
         let user = try await getCurrentUser()
         tokenManager.save(user: user)
@@ -52,7 +52,7 @@ final class AuthService: AuthServiceProtocol {
             body: body
         )
 
-        tokenManager.save(token: authResponse.token)
+        tokenManager.save(token: authResponse.token, expiration: authResponse.expiration)
 
         let user = try await getCurrentUser()
         tokenManager.save(user: user)

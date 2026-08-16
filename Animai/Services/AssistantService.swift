@@ -44,20 +44,48 @@ final class AssistantService: AssistantServiceProtocol {
     }
 
     func getRecommendations() async throws -> [Recommendation] {
-        let response: RecommendationResponse = try await ApiService.shared.request(
-            endpoint: "/api/assistant/recommend",
-            method: "GET",
-            token: tokenManager.getToken()
-        )
-
-        return response.recommendations.map { rec in
-            Recommendation(
-                title: rec.title,
-                subtitle: "Recomendación personalizada",
-                detailText: rec.content,
-                borderColor: .systemBlue
+        do {
+            let response: RecommendationResponse = try await ApiService.shared.request(
+                endpoint: "/api/assistant/recommend",
+                method: "GET",
+                token: tokenManager.getToken()
             )
+
+            let recommendations = response.recommendations.map { rec in
+                Recommendation(
+                    title: rec.title,
+                    subtitle: rec.content,
+                    detailText: rec.content,
+                    borderColor: AppTheme.primaryBlue
+                )
+            }
+
+            if recommendations.isEmpty {
+                return getMockRecommendations()
+            }
+
+            return recommendations
+        } catch {
+            print("Error en getRecommendations: \(error). Devolviendo mocks.")
+            return getMockRecommendations()
         }
+    }
+
+    private func getMockRecommendations() -> [Recommendation] {
+        return [
+            Recommendation(
+                title: "Meditación de Calma",
+                subtitle: "Técnica de Respiración 4-7-8",
+                detailText: "Inhala durante 4 segundos, mantén durante 7 segundos, exhala durante 8 segundos.",
+                borderColor: AppTheme.greenAccent
+            ),
+            Recommendation(
+                title: "Recomendación de Lectura",
+                subtitle: "Libro: El Poder del Ahora",
+                detailText: "Dedica 15 minutos al día a leer \"El Poder del Ahora\" de Eckhart Tolle.",
+                borderColor: AppTheme.purpleAccent
+            )
+        ]
     }
 
     func getMoodCard() async throws -> MoodCard {
@@ -67,10 +95,28 @@ final class AssistantService: AssistantServiceProtocol {
             token: tokenManager.getToken()
         )
 
+        // Mapeo simple de mood a emoji
+        let mood = response.mood.lowercased()
+        let emoji: String
+        if mood.contains("ansioso") || mood.contains("ansiedad") {
+            emoji = "😰"
+        } else if mood.contains("feliz") || mood.contains("bien") || mood.contains("alegre") {
+            emoji = "😊"
+        } else if mood.contains("triste") || mood.contains("mal") {
+            emoji = "😔"
+        } else if mood.contains("neutral") {
+            emoji = "😐"
+        } else if mood.contains("enojado") || mood.contains("ira") {
+            emoji = "😠"
+        } else {
+            emoji = "✨"
+        }
+
         return MoodCard(
-            emoji: "✨", // Podríamos mapear el 'mood' a un emoji
+            emoji: emoji,
             title: response.mood,
-            status: "Detectado para \(response.nameUser)"
+            status: "Detectado para \(response.nameUser)",
+            imageURL: response.moodImage
         )
     }
 }

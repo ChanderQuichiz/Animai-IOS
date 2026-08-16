@@ -19,9 +19,11 @@ final class RecommendationTableViewCell: UITableViewCell {
 
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         titleLabel.textColor = AppTheme.primaryDark
+        titleLabel.numberOfLines = 0
 
         subtitleLabel.font = AppTheme.subtitleFont(size: 14)
         subtitleLabel.textColor = AppTheme.subtitle
+        subtitleLabel.numberOfLines = 0
     }
 
     func configure(with recommendation: Recommendation) {

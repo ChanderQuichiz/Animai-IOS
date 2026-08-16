@@ -16,6 +16,8 @@ final class ProfileViewController: UIViewController {
     @IBOutlet private weak var logoutRow: UIControl!
     @IBOutlet private weak var logoutLabel: UILabel!
 
+    @IBOutlet private weak var recommendationsTableHeightConstraint: NSLayoutConstraint!
+
     private lazy var backButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
@@ -23,6 +25,8 @@ final class ProfileViewController: UIViewController {
         button.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         return button
     }()
+
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
 
     init(viewModel: ProfileViewModelProtocol = ProfileViewModel()) {
         self.viewModel = viewModel
@@ -41,10 +45,20 @@ final class ProfileViewController: UIViewController {
         bindData()
     }
 
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateNavigationAppearance()
         refreshUserName()
+
+        if !TokenManager.shared.hasValidSession() {
+            AppNavigator.handleSessionExpired(from: self)
+            return
+        }
+
+        Task {
+            await viewModel.fetchData()
+        }
     }
 
     private func refreshUserName() {
@@ -69,18 +83,41 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = AppTheme.background
         navigationItem.title = nil
 
+        // Ocultar el label del nombre superior
+        nameLabel.isHidden = true
+
+        // Asegurar que el contenido no se pegue al notch y tenga espacio al final
+        scrollView.contentInsetAdjustmentBehavior = .always
+        scrollView.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 30, right: 0)
+
+        // Configurar Loading Indicator
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.color = AppTheme.primaryBlue
+        view.addSubview(loadingIndicator)
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+
         // Estilos de Outlets (Fuentes y Colores)
         nameLabel.font = AppTheme.titleFont(size: 24)
         nameLabel.textColor = AppTheme.primaryDark
+        nameLabel.numberOfLines = 0
+        nameLabel.textAlignment = .center
+        nameLabel.lineBreakMode = .byWordWrapping
 
         recommendationsTitle.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         recommendationsTitle.textColor = AppTheme.primaryDark
+        recommendationsTitle.numberOfLines = 0
 
         profileTitle.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         profileTitle.textColor = AppTheme.primaryDark
+        profileTitle.numberOfLines = 0
 
         logoutLabel.font = AppTheme.bodyFont()
         logoutLabel.textColor = AppTheme.primaryDark
+        logoutLabel.numberOfLines = 0
 
         logoutRow.backgroundColor = AppTheme.cardBackground
         logoutRow.layer.cornerRadius = 12
@@ -95,12 +132,27 @@ final class ProfileViewController: UIViewController {
             forCellReuseIdentifier: "RecommendationCell"
         )
         recommendationsTableView.isScrollEnabled = false
+        recommendationsTableView.rowHeight = UITableView.automaticDimension
+        recommendationsTableView.estimatedRowHeight = 100
     }
 
     private func bindData() {
         nameLabel.text = viewModel.userName
 
         if let vm = viewModel as? ProfileViewModel {
+            vm.$isLoading
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] isLoading in
+                    if isLoading {
+                        self?.loadingIndicator.startAnimating()
+                        self?.scrollView.alpha = 0.5
+                    } else {
+                        self?.loadingIndicator.stopAnimating()
+                        self?.scrollView.alpha = 1.0
+                    }
+                }
+                .store(in: &cancellables)
+
             vm.$mood
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] mood in
@@ -118,9 +170,27 @@ final class ProfileViewController: UIViewController {
                 .store(in: &cancellables)
         }
 
-        Task {
-            await viewModel.fetchData()
+        // Observar el contentSize para ajustar la altura de la tabla automáticamente
+        recommendationsTableView.publisher(for: \.contentSize)
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] size in
+                self?.updateTableViewHeight(with: size.height)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateTableViewHeight(with height: CGFloat) {
+        if let constraint = recommendationsTableHeightConstraint {
+            constraint.constant = height
+        } else {
+            for constraint in recommendationsTableView.constraints {
+                if constraint.firstAttribute == .height {
+                    constraint.constant = height
+                }
+            }
         }
+        view.setNeedsLayout()
     }
 
     @objc private func backTapped() {
