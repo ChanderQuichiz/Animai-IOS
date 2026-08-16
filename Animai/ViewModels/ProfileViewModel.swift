@@ -1,60 +1,54 @@
 import UIKit
+import Combine
 
 protocol ProfileViewModelProtocol {
     var userName: String { get }
-    var mood: MoodCard { get }
+    var mood: MoodCard? { get }
     var recommendations: [Recommendation] { get }
+    var isLoading: Bool { get }
+    func fetchData() async
     func logout()
 }
 
-final class ProfileViewModel: ProfileViewModelProtocol {
+final class ProfileViewModel: ProfileViewModelProtocol, ObservableObject {
+
+    @Published private(set) var recommendations: [Recommendation] = []
+    @Published private(set) var mood: MoodCard?
+    @Published private(set) var isLoading: Bool = false
 
     private let tokenManager: TokenStoring
     private let authService: AuthServiceProtocol
+    private let assistantService: AssistantServiceProtocol
 
     init(
         tokenManager: TokenStoring = TokenManager.shared,
-        authService: AuthServiceProtocol = AuthService.shared
+        authService: AuthServiceProtocol = AuthService.shared,
+        assistantService: AssistantServiceProtocol = AssistantService.shared
     ) {
         self.tokenManager = tokenManager
         self.authService = authService
+        self.assistantService = assistantService
     }
 
     var userName: String {
-        let name = tokenManager.getUser()?.fullName
+        let name = tokenManager.getUser()?.name
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return name.isEmpty ? "Usuario" : name
     }
 
-    var mood: MoodCard {
-        MoodCard(
-            emoji: "😁",
-            title: "ESTADO DE ÁNIMO",
-            status: "Muy Feliz"
-        )
-    }
+    @MainActor
+    func fetchData() async {
+        isLoading = true
+        do {
+            async let moodCard = assistantService.getMoodCard()
+            async let recs = assistantService.getRecommendations()
 
-    var recommendations: [Recommendation] {
-        [
-            Recommendation(
-                title: "Meditación de Calma",
-                subtitle: "Técnica de Respiración 4-7-8",
-                detailText: "Inhala durante 4 segundos, mantén durante 7 segundos, exhala durante 8 segundos. Repite 4 veces para calmar tu mente y cuerpo.",
-                borderColor: AppTheme.greenAccent
-            ),
-            Recommendation(
-                title: "Recomendación de Lectura",
-                subtitle: "Libro: El Poder del Ahora",
-                detailText: "Dedica 15 minutos al día a leer \"El Poder del Ahora\" de Eckhart Tolle. Concéntrate en estar presente y observar tus pensamientos sin juzgarlos.",
-                borderColor: AppTheme.purpleAccent
-            ),
-            Recommendation(
-                title: "Ejercicio de Gratitud",
-                subtitle: "Escribe 3 cosas positivas hoy",
-                detailText: "Al final del día, escribe tres cosas positivas que hayan ocurrido. Pueden ser pequeñas: una conversación agradable, un buen café o un momento de tranquilidad.",
-                borderColor: AppTheme.tealAccent
-            )
-        ]
+            self.mood = try await moodCard
+            self.recommendations = try await recs
+        } catch {
+            print("Error fetching profile data: \(error)")
+        }
+        isLoading = false
     }
 
     func logout() {

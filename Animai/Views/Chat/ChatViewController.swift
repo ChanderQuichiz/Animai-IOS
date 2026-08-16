@@ -108,9 +108,12 @@ final class ChatViewController: UIViewController {
     
     
     private func sendCurrentMessage() {
-        viewModel.messageText = messageTextField.text ?? ""
-        viewModel.sendMessage()
+        let text = messageTextField.text ?? ""
+        viewModel.messageText = text
         messageTextField.text = ""
+        Task {
+            await viewModel.sendMessage()
+        }
     }
     
     

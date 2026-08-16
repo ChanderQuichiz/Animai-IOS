@@ -91,8 +91,14 @@ final class RegisterViewController: UIViewController {
     }
 
     @objc private func dateChanged() {
-        viewModel.birthDate = datePicker.date
-        birthDateField.textField.text = formatDate(datePicker.date)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        viewModel.birthDate = formatter.string(from: datePicker.date)
+
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateStyle = .medium
+        displayFormatter.locale = Locale(identifier: "es_ES")
+        birthDateField.textField.text = displayFormatter.string(from: datePicker.date)
     }
 
     @objc private func donePickingDate() {
@@ -123,10 +129,11 @@ final class RegisterViewController: UIViewController {
     }
 
     private func syncViewModel() {
-        viewModel.fullName = fullNameField.textField.text ?? ""
+        viewModel.name = fullNameField.textField.text ?? ""
         viewModel.email = emailField.textField.text ?? ""
         viewModel.password = passwordField.textField.text ?? ""
         viewModel.confirmPassword = confirmPasswordField.textField.text ?? ""
+        viewModel.gender = "No especificado" // Valor por defecto ya que no hay campo en UI
     }
 
     private func formatDate(_ date: Date) -> String {

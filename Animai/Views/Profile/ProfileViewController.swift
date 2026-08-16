@@ -1,8 +1,10 @@
 import UIKit
+import Combine
 
 final class ProfileViewController: UIViewController {
 
     private let viewModel: ProfileViewModelProtocol
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Outlets
     @IBOutlet private weak var scrollView: UIScrollView!
@@ -97,8 +99,28 @@ final class ProfileViewController: UIViewController {
 
     private func bindData() {
         nameLabel.text = viewModel.userName
-        moodCard.configure(with: viewModel.mood)
-        recommendationsTableView.reloadData()
+
+        if let vm = viewModel as? ProfileViewModel {
+            vm.$mood
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] mood in
+                    if let mood = mood {
+                        self?.moodCard.configure(with: mood)
+                    }
+                }
+                .store(in: &cancellables)
+
+            vm.$recommendations
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.recommendationsTableView.reloadData()
+                }
+                .store(in: &cancellables)
+        }
+
+        Task {
+            await viewModel.fetchData()
+        }
     }
 
     @objc private func backTapped() {

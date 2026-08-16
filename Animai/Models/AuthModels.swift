@@ -1,10 +1,23 @@
 import Foundation
 
 struct User: Codable, Equatable {
-    let id: String
-    let fullName: String
+    let id: Int
+    let name: String
     let email: String
-    let birthDate: Date?
+    let birthDate: String?
+    let gender: String?
+}
+
+struct AuthResponse: Codable {
+    let token: String
+}
+
+enum ApiError: Error {
+    case invalidURL
+    case invalidResponse
+    case decodingError
+    case serverError(Int)
+    case unauthorized
 }
 
 struct LoginCredentials {
@@ -13,11 +26,12 @@ struct LoginCredentials {
 }
 
 struct RegisterCredentials {
-    var fullName: String = ""
+    var name: String = ""
     var email: String = ""
     var password: String = ""
     var confirmPassword: String = ""
-    var birthDate: Date?
+    var birthDate: String = ""
+    var gender: String = ""
 }
 
 enum AuthError: LocalizedError {
